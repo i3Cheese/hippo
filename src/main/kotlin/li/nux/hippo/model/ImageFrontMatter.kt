@@ -92,19 +92,3 @@ data class ImageFrontMatter(
     }
 }
 
-@Serializable
-data class AllImages(
-    val images: Map<String, ImageFrontMatter>
-)
-
-@Serializable
-data class AllKeywords(
-    val keyword: Map<String, KeywordItem>
-)
-
-@Serializable
-data class KeywordItem(
-    val keyword: String,
-    val count: Int,
-    val weight: Int = 0,
-)

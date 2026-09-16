@@ -75,7 +75,7 @@ fun execute(
             taskResults[NEW_ALBUM_TOTAL] = it.groupBy { im -> im.album }.keys.size
         }
         .groupBy { it.getAlbumId() }
-        .also { createOrReplacePages(it, params, hugoPaths) }
+        .also { createOrReplacePages(it, params) }
     updateAlbumMarkdownDocs(allImages, params, hugoPaths)
     val newAndChangedImages = imageChanges.changedOnDisk.plus(imageChanges.inserted.values)
     createImageFiles(newAndChangedImages.groupBy { it.getAlbumId() }, params)

@@ -89,9 +89,7 @@ private fun writeAlbumFrontMatterFilesToDisk(
 fun createOrReplacePages(
     albumsWithImages: Map<String, List<ImageMetadata>>,
     params: HippoParams,
-    hugoPaths: HugoPaths
 ) {
-    val imfMap = HashMap<String, ImageFrontMatter>().toMutableMap()
     albumsWithImages.forEach {
         printIf(params,
             "Album ${it.key} has ${it.value.size} images. Files to create/update:  ${it.key}.md " +
@@ -100,7 +98,6 @@ fun createOrReplacePages(
         it.value.forEach { im ->
             val imFile = Paths.get(im.path + File.separator + im.getReference() + MARK_DOWN_FILE_EXTENSION)
             val imf = ImageFrontMatter.from(im)
-            imfMap[imf.imageId] = imf
             val frontMatter = when (params.frontMatterFormat) {
                 JSON -> prettyJson.encodeToString(imf)
                 TOML -> tomlWrap(lenientToml.encodeToString(ImageFrontMatter.serializer(), imf))
@@ -119,8 +116,6 @@ fun createOrReplacePages(
             Files.write(imFile, frontMatter.toByteArray())
         }
     }
-    createDatafileWithAllImages(hugoPaths, imfMap)
-    createDatafileWithAllKeywords(hugoPaths, imfMap)
 }
 
 fun getImagesFromFrontMatters(
