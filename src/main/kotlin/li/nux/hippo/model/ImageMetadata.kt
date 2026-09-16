@@ -25,6 +25,7 @@ data class ImageMetadata(
     val updated: LocalDateTime? = null,
     val stockImageSite: List<String> = emptyList(),
     val extra: Map<String, String> = emptyMap(),
+    val contentHash: String? = null,
 ) {
     fun getReference() = IMG_NAME_PREFIX + getDocumentId()
 
@@ -92,7 +93,8 @@ data class ImageMetadata(
             year = getYearFrom(resultSet.getString("capture_date"))?.let { listOf(it) } ?: emptyList(),
             captureDate = resultSet.getString("capture_date"),
             captureTime = resultSet.getString("capture_time"),
-            keywords = resultSet.getString("keywords").split(", ", "; ", ",", ";").distinct(),
+            keywords = resultSet.getString("keywords")
+                .let { if (it.isNullOrBlank()) emptyList() else it.split(", ", "; ", ",", ";").distinct() },
             exposureDetails = ExposureDetails(
                 focalLength = resultSet.getString("focal_length"),
                 aperture = resultSet.getString("f_number"),
@@ -103,6 +105,7 @@ data class ImageMetadata(
             ),
             stockImageSite = getStockImageSiteFrom(resultSet),
             extra = resultSet.getString("extra_fields").let { prettyJson.decodeFromString(it) },
+            contentHash = resultSet.getString("content_hash"),
             created = resultSet.getTimestamp("created").toLocalDateTime(),
             updated = resultSet.getTimestamp("updated").toLocalDateTime(),
         )

@@ -49,8 +49,7 @@ fun updateAlbumMarkdownDocs(
     groupedByPath.forEach { (albumPath, albums) ->
         val subAlbums = groupedByPath.keys
             .filter { isDirectSubfolder(it, albumPath) }
-            .flatMap { groupedByPath[it]!! }
-            .map { SubAlbum.from(it, albumPath) }
+            .flatMap { childPath -> groupedByPath[childPath]!!.map { SubAlbum.from(it, childPath) } }
             .sortedBy { it.title }
         val path = Path.of(albumPath + File.separator + "_index.md")
         printIf(params, "Front matter index path $path")

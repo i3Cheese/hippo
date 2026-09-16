@@ -90,8 +90,9 @@ class StorageService {
                 prepped.setString(16, img.exposureDetails?.cameraModel)
                 prepped.setString(17, img.stockImageSite.firstOrNull())
                 prepped.setString(18, img.extra.let { prettyJson.encodeToString(it) })
-                prepped.setString(19, now)
-                prepped.setInt(20, id)
+                prepped.setString(19, img.contentHash)
+                prepped.setString(20, now)
+                prepped.setInt(21, id)
                 prepped.executeUpdate()
             }
         } catch (e: SQLException) {
@@ -126,8 +127,9 @@ class StorageService {
                 prepped.setString(17, img.exposureDetails?.cameraModel)
                 prepped.setString(18, img.stockImageSite.firstOrNull() )
                 prepped.setString(19, img.extra.let { prettyJson.encodeToString(it) } )
-                prepped.setString(20, now)
+                prepped.setString(20, img.contentHash)
                 prepped.setString(21, now)
+                prepped.setString(22, now)
                 prepped.executeUpdate()
                 return prepped.generatedKeys.getInt(1)
             }
@@ -136,6 +138,20 @@ class StorageService {
             return -1
         } finally {
             log.trace(" inserted new posted image with reference ${img.getReference()}")
+        }
+    }
+
+    fun updateContentHash(id: Int, contentHash: String?) {
+        val connection = connect()
+        try {
+            connection.prepareStatement(UPDATE_CONTENT_HASH).use { prepped ->
+                prepped.setString(1, contentHash)
+                prepped.setInt(2, id)
+                prepped.executeUpdate()
+            }
+        } catch (e: SQLException) {
+            log.error("Failed to update content hash for id $id: {}", e.message)
+            throw StorageException("Failed to update content hash for id $id")
         }
     }
 
@@ -176,9 +192,13 @@ class StorageService {
                 camera_model TEXT,
                 stock_image_site TEXT NULL,
                 extra_fields TEXT NOT NULL,
-                created TEXT NOT NULL, 
+                content_hash TEXT,
+                created TEXT NOT NULL,
                 updated TEXT NOT NULL
             );"""
+
+        private const val ADD_CONTENT_HASH_COLUMN =
+            "ALTER TABLE posted_image ADD COLUMN content_hash TEXT"
 
         private const val UPDATE_POSTED_IMAGE = """
             UPDATE posted_image SET
@@ -200,9 +220,11 @@ class StorageService {
                 camera_model = ?,
                 stock_image_site = ?,
                 extra_fields = ?,
+                content_hash = ?,
                 updated = ?
             WHERE id = ?
         """
+        private const val UPDATE_CONTENT_HASH = "UPDATE posted_image SET content_hash = ? WHERE id = ?"
         private const val FIND_BY_IMAGE_ID = "SELECT * FROM posted_image WHERE image_id = ?"
         private const val FETCH_ALL = "SELECT * FROM posted_image ORDER BY image_id"
         private const val DELETE_POSTED_IMAGE = "DELETE FROM posted_image where id = ? and image_id = ?"
@@ -224,13 +246,14 @@ class StorageService {
                 exposure_time, 
                 iso, 
                 camera_make, 
-                camera_model, 
+                camera_model,
                 stock_image_site,
                 extra_fields,
-                created, 
+                content_hash,
+                created,
                 updated
-            ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
 
         fun createTable() {
@@ -239,6 +262,14 @@ class StorageService {
                 connection.use { conn ->
                     conn.createStatement().use { stmt ->
                         stmt.execute(CREATE_TABLE_POSTED_IMAGE)
+                    }
+                    // Migration for databases created before content_hash existed.
+                    conn.createStatement().use { stmt ->
+                        try {
+                            stmt.execute(ADD_CONTENT_HASH_COLUMN)
+                        } catch (e: SQLException) {
+                            if (e.message?.contains("duplicate column name") != true) throw e
+                        }
                     }
                 }
             } catch (e: SQLException) {

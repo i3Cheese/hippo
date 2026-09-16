@@ -84,8 +84,7 @@ data class SubAlbum(
                 albumTitle = album.title,
                 coverImage = album.coverImage,
                 imageCount = album.images.size.plus (album.subAlbums.sumOf { it.imageCount ?: 0}),
-                path = (realPath.lowercase().split("/content").last() + File.separator + album.title.lowercase())
-                    .replace(' ', '_'),
+                path = realPath.lowercase().split("/content").last(),
                 lastUpdated = album.images
                     .map { it.lastUpdated }
                     .maxByOrNull { it }

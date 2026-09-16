@@ -5,4 +5,5 @@ data class ImageChanges(
     val frontMatterChanged: MutableList<ImageMetadata>,
     val inserted: MutableMap<String, ImageMetadata>,
     val deleted: MutableList<ImageMetadata>,
+    val needsReprocessing: List<ImageMetadata>,
 )

@@ -129,7 +129,7 @@ fun getImageMetadata(file: Path, params: HippoParams): ImageMetadata {
         printError("Could not get metadata for " + file.toAbsolutePath() + ": " + e.message)
         imageMetadata = ImageMetadata(path = path, album = album, filename = filename)
     }
-    return imageMetadata
+    return imageMetadata.copy(contentHash = computeFileHash(file))
 }
 
 /**

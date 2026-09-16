@@ -77,8 +77,7 @@ fun execute(
         .groupBy { it.getAlbumId() }
         .also { createOrReplacePages(it, params) }
     updateAlbumMarkdownDocs(allImages, params, hugoPaths)
-    val newAndChangedImages = imageChanges.changedOnDisk.plus(imageChanges.inserted.values)
-    createImageFiles(newAndChangedImages.groupBy { it.getAlbumId() }, params)
+    createImageFiles(imageChanges.needsReprocessing.groupBy { it.getAlbumId() }, params)
 //    refine(hugoPaths = hugoPaths, params = params)
     printResult(taskResults)
 }
@@ -266,8 +265,11 @@ private fun synchronizeImages(
             .map { it.getReference() to it }
     )
 
-    // Read all images from disk
+    // Read all images from disk. `extra` can only ever come from front matter (it isn't embedded
+    // in the jpeg itself), so carry over whatever is already tracked instead of comparing against
+    // an empty map every run and endlessly flagging every image as changed.
     val imagesFromDisk: List<ImageMetadata> = getAllImagesFromDisk(paths, tika, params, demoResponse)
+        .map { fromDisk -> images[fromDisk.getReference()]?.let { fromDisk.copy(extra = it.extra) } ?: fromDisk }
 
     // Read all markdown front matters from disk
     val imagesFromFrontMatters: List<ImageMetadata> = getImagesFromFrontMatters(paths, tika)
@@ -303,15 +305,36 @@ private fun synchronizeImages(
     taskResults[DELETED_IMAGES] = toBeDeletedFromDb.size
     val updateList = getUpdateList(params, imagesChangedOnDisk, frontMatterChanged)
 
+    // The photo's content hash can only ever be known from the file on disk (front matter never
+    // carries it), so it must never be clobbered with null by a front-matter-driven update.
+    val diskContentHashByReference = imagesFromDisk.associate { it.getReference() to it.contentHash }
+
     toBeInsertedInDb.values.forEach { handleNewImage(storageService, it, params) }
-    updateList.forEach { handleUpdate(storageService, images[it.getReference()]?.id!!, it) }
+    updateList.forEach {
+        val withContentHash = it.copy(contentHash = diskContentHashByReference[it.getReference()] ?: it.contentHash)
+        handleUpdate(storageService, images[it.getReference()]?.id!!, withContentHash)
+    }
     toBeDeletedFromDb.forEach { handleDelete(storageService, it) }
+
+    // Whether a photo needs its resized image sets regenerated is a question about the file's
+    // bytes, not its metadata/caption - keeping this independent of imagesChangedOnDisk means a
+    // hand-edited title/description no longer triggers a pointless full reprocess. The hash is
+    // persisted here, independent of whether any metadata field also changed, since otherwise an
+    // image whose only "change" is its content hash backfilling would never get recorded and
+    // would look changed on every future run too.
+    val needsReprocessing = imagesFromDisk.filter { fromDisk ->
+        images[fromDisk.getReference()]?.contentHash != fromDisk.contentHash
+    }
+    needsReprocessing.forEach { fromDisk ->
+        images[fromDisk.getReference()]?.id?.let { id -> storageService.updateContentHash(id, fromDisk.contentHash) }
+    }
 
     return ImageChanges(
         imagesChangedOnDisk,
         frontMatterChanged,
         toBeInsertedInDb,
-        toBeDeletedFromDb
+        toBeDeletedFromDb,
+        needsReprocessing,
     )
 }
 

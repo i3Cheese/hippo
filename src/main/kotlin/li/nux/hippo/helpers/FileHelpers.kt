@@ -6,12 +6,28 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 import java.util.stream.Collectors
 import li.nux.hippo.HippoParams
 import li.nux.hippo.HugoPaths
 import li.nux.hippo.MAX_DIRECTORY_DEPTH
 import li.nux.hippo.printError
 import li.nux.hippo.printIf
+
+fun computeFileHash(file: Path): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    Files.newInputStream(file).use { input ->
+        val buffer = ByteArray(DEFAULT_ARRAY_SIZE)
+        var read = input.read(buffer)
+        while (read != -1) {
+            digest.update(buffer, 0, read)
+            read = input.read(buffer)
+        }
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
+}
+
+private const val DEFAULT_ARRAY_SIZE = 8192
 
 fun getSetOfPaths(path: Path): Set<Path> {
     try {
