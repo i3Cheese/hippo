@@ -3,11 +3,20 @@ package li.nux.hippo.helpers
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import com.akuleshov7.ktoml.Toml
+import com.akuleshov7.ktoml.TomlInputConfig
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import li.nux.hippo.HugoPaths
 import li.nux.hippo.model.ImageFrontMatter
 import li.nux.hippo.model.KeywordItem
+
+// Front matter is hand-edited by users (e.g. to add custom fields under `extra`), so all three
+// formats are configured to ignore unrecognized keys instead of throwing on the next run.
+val lenientYaml = Yaml(configuration = YamlConfiguration(strictMode = false))
+val lenientToml = Toml(inputConfig = TomlInputConfig(ignoreUnknownNames = true))
 
 @OptIn(ExperimentalSerializationApi::class)
 val prettyJson = Json { // this returns the JsonBuilder
@@ -15,6 +24,7 @@ val prettyJson = Json { // this returns the JsonBuilder
     encodeDefaults = false
     prettyPrintIndent = "    "
     explicitNulls = false
+    ignoreUnknownKeys = true
 }
 
 private const val NUMBER_OF_BUCKETS = 9

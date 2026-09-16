@@ -3,8 +3,6 @@ package li.nux.hippo.helpers
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.isRegularFile
-import com.akuleshov7.ktoml.Toml
-import com.charleskorn.kaml.Yaml
 import li.nux.hippo.FrontMatterFormat.JSON
 import li.nux.hippo.FrontMatterFormat.TOML
 import li.nux.hippo.FrontMatterFormat.YAML
@@ -38,8 +36,8 @@ fun refine(
 private fun writeFrontMatterToFile(params: HippoParams, imf: ImageFrontMatter, path: Path) {
     val frontMatter = when (params.frontMatterFormat) {
         JSON -> prettyJson.encodeToString(imf)
-        TOML -> tomlWrap(Toml.encodeToString(ImageFrontMatter.serializer(), imf))
-        YAML -> yamlWrap(Yaml.default.encodeToString(ImageFrontMatter.serializer(), imf))
+        TOML -> tomlWrap(lenientToml.encodeToString(ImageFrontMatter.serializer(), imf))
+        YAML -> yamlWrap(lenientYaml.encodeToString(ImageFrontMatter.serializer(), imf))
     }
     Files.write(path, frontMatter.toByteArray())
 }

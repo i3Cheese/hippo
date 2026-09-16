@@ -107,9 +107,9 @@ fun getImageMetadata(file: Path, params: HippoParams): ImageMetadata {
                     keywords = Optional.ofNullable(iptcDirectory.keywords)
                         .orElse(emptyList())
                         .map { it.replace("\"", "") }
+                        .distinct()
                         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it }),
                     exposureDetails = exposureDetails,
-                    extra = mapOf("parameter_name" to "parameter_value"),
                 )
             }.orElseGet {
                 val fallback = getCaptureDateTimeFromExifOrXmp(metadata, exifDirectory)

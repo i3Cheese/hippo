@@ -72,23 +72,26 @@ class StorageService {
         val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
         try {
             connection.prepareStatement(UPDATE_POSTED_IMAGE).use { prepped ->
-                prepped.setInt(1, img.hashCode())
-                prepped.setString(2, img.title)
-                prepped.setString(3, img.description)
-                prepped.setString(4, img.credit)
-                prepped.setString(5, img.captureDate)
-                prepped.setString(6, img.captureTime)
-                prepped.setString(7, java.lang.String.join(", ", img.keywords.distinct()))
-                prepped.setString(8, img.exposureDetails?.focalLength)
-                prepped.setString(9, img.exposureDetails?.aperture)
-                prepped.setString(10, img.exposureDetails?.exposureTime)
-                prepped.setString(11, img.exposureDetails?.iso)
-                prepped.setString(12, img.exposureDetails?.cameraMake)
-                prepped.setString(13, img.exposureDetails?.cameraModel)
-                prepped.setString(14, img.stockImageSite.firstOrNull())
-                prepped.setString(15, img.extra.let { prettyJson.encodeToString(it) })
-                prepped.setString(16, now)
-                prepped.setInt(17, id)
+                prepped.setString(1, img.path)
+                prepped.setString(2, img.album)
+                prepped.setString(3, img.filename)
+                prepped.setInt(4, img.hashCode())
+                prepped.setString(5, img.title)
+                prepped.setString(6, img.description)
+                prepped.setString(7, img.credit)
+                prepped.setString(8, img.captureDate)
+                prepped.setString(9, img.captureTime)
+                prepped.setString(10, java.lang.String.join(", ", img.keywords.distinct()))
+                prepped.setString(11, img.exposureDetails?.focalLength)
+                prepped.setString(12, img.exposureDetails?.aperture)
+                prepped.setString(13, img.exposureDetails?.exposureTime)
+                prepped.setString(14, img.exposureDetails?.iso)
+                prepped.setString(15, img.exposureDetails?.cameraMake)
+                prepped.setString(16, img.exposureDetails?.cameraModel)
+                prepped.setString(17, img.stockImageSite.firstOrNull())
+                prepped.setString(18, img.extra.let { prettyJson.encodeToString(it) })
+                prepped.setString(19, now)
+                prepped.setInt(20, id)
                 prepped.executeUpdate()
             }
         } catch (e: SQLException) {
@@ -141,7 +144,7 @@ class StorageService {
         try {
             connection.prepareStatement(DELETE_POSTED_IMAGE).use { prepped ->
                 prepped.setInt(1, id)
-                prepped.setString(1, imageId)
+                prepped.setString(2, imageId)
                 prepped.executeUpdate()
             }
         } catch (e: SQLException) {
@@ -178,19 +181,22 @@ class StorageService {
             );"""
 
         private const val UPDATE_POSTED_IMAGE = """
-            UPDATE posted_image SET 
+            UPDATE posted_image SET
+                path = ?,
+                album_name = ?,
+                photo_filename = ?,
                 hash_code = ?,
-                title = ?, 
-                description = ?, 
-                credit = ?, 
-                capture_date = ?, 
-                capture_time = ?, 
-                keywords = ?, 
-                focal_length = ?, 
-                f_number = ?, 
-                exposure_time = ?, 
-                iso = ?, 
-                camera_make = ?, 
+                title = ?,
+                description = ?,
+                credit = ?,
+                capture_date = ?,
+                capture_time = ?,
+                keywords = ?,
+                focal_length = ?,
+                f_number = ?,
+                exposure_time = ?,
+                iso = ?,
+                camera_make = ?,
                 camera_model = ?,
                 stock_image_site = ?,
                 extra_fields = ?,

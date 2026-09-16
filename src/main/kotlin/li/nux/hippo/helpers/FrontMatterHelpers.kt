@@ -6,9 +6,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.Base64
 import kotlin.io.path.exists
-import com.akuleshov7.ktoml.Toml
-import com.charleskorn.kaml.Yaml
-import kotlinx.serialization.json.Json
 import li.nux.hippo.FrontMatterFormat
 import li.nux.hippo.FrontMatterFormat.JSON
 import li.nux.hippo.FrontMatterFormat.TOML
@@ -65,6 +62,7 @@ fun updateAlbumMarkdownDocs(
             it.subAlbums = subAlbums
             existingAlbumFromFrontMatter?.also { afm ->
                 it.title = afm.title.replace('_', ' ')
+                it.albumTitle = afm.albumTitle.replace('_', ' ')
                 it.description = afm.description
                 it.coverImage = afm.coverImage
             }
@@ -81,8 +79,8 @@ private fun writeAlbumFrontMatterFilesToDisk(
         val albumFile = Paths.get(albumPath + File.separator + "_index.md")
         val frontMatter = when (params.frontMatterFormat) {
             JSON -> prettyJson.encodeToString(albums.first())
-            TOML -> tomlWrap(Toml.encodeToString(Album.serializer(), albums.first()))
-            YAML -> yamlWrap(Yaml.default.encodeToString(Album.serializer(), albums.first()))
+            TOML -> tomlWrap(lenientToml.encodeToString(Album.serializer(), albums.first()))
+            YAML -> yamlWrap(lenientYaml.encodeToString(Album.serializer(), albums.first()))
         }
         Files.write(albumFile, frontMatter.toByteArray())
     }
@@ -105,8 +103,8 @@ fun createOrReplacePages(
             imfMap[imf.imageId] = imf
             val frontMatter = when (params.frontMatterFormat) {
                 JSON -> prettyJson.encodeToString(imf)
-                TOML -> tomlWrap(Toml.encodeToString(ImageFrontMatter.serializer(), imf))
-                YAML -> yamlWrap(Yaml.default.encodeToString(ImageFrontMatter.serializer(), imf))
+                TOML -> tomlWrap(lenientToml.encodeToString(ImageFrontMatter.serializer(), imf))
+                YAML -> yamlWrap(lenientYaml.encodeToString(ImageFrontMatter.serializer(), imf))
             }
 
             when (imFile.exists()) {
@@ -138,12 +136,12 @@ fun getImagesFromFrontMatters(
 fun getImageDataFromFrontMatter(file: Path): ImageFrontMatter {
     val allLines = Files.readAllLines(file)
     return when (val fmf = FrontMatterFormat.fromFirstLine(allLines.first())) {
-        JSON -> Json.decodeFromString<ImageFrontMatter>(getFrontMatterPart(fmf, allLines))
-        TOML -> Toml.decodeFromString(
+        JSON -> prettyJson.decodeFromString<ImageFrontMatter>(getFrontMatterPart(fmf, allLines))
+        TOML -> lenientToml.decodeFromString(
             ImageFrontMatter.serializer(),
             getFrontMatterPart(fmf, allLines)
         )
-        YAML -> Yaml.default.decodeFromString(
+        YAML -> lenientYaml.decodeFromString(
             ImageFrontMatter.serializer(),
             getFrontMatterPart(fmf, allLines)
         )
@@ -153,12 +151,12 @@ fun getImageDataFromFrontMatter(file: Path): ImageFrontMatter {
 fun getAlbumDataFromFrontMatter(file: Path): Album {
     val allLines = Files.readAllLines(file)
     return when (val fmf = FrontMatterFormat.fromFirstLine(allLines.first())) {
-        JSON -> Json.decodeFromString<Album>(getFrontMatterPart(fmf, allLines))
-        TOML -> Toml.decodeFromString(
+        JSON -> prettyJson.decodeFromString<Album>(getFrontMatterPart(fmf, allLines))
+        TOML -> lenientToml.decodeFromString(
             Album.serializer(),
             getFrontMatterPart(fmf, allLines)
         )
-        YAML -> Yaml.default.decodeFromString(
+        YAML -> lenientYaml.decodeFromString(
             Album.serializer(),
             getFrontMatterPart(fmf, allLines)
         )
