@@ -7,6 +7,7 @@ import java.util.Base64
 import java.util.Locale
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -19,7 +20,9 @@ data class Album(
     var albumTitle: String = "",
     var description: String = "",
     var coverImage: GalleryImage? = null,
+    @Transient
     var subAlbums: List<SubAlbum> = emptyList(),
+    @Transient
     val images: List<AlbumImage> = emptyList(),
     val lastUpdated: String = formatter.format(LocalDateTime.now()),
 ) {
