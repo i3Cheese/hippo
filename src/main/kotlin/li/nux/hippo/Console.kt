@@ -1,7 +1,6 @@
 package li.nux.hippo
 
 import java.io.File
-import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.util.Base64
 import java.util.Locale
@@ -89,12 +88,7 @@ data class HippoParams(
     val watermark: WatermarkConfig?,
     val verbose: Boolean = false,
     val demo: Boolean = false,
-    val contentDirectory: String,
-) {
-    fun getContentDirectoryFullPath(): String {
-        return Path.of(contentDirectory).toRealPath(LinkOption.NOFOLLOW_LINKS).normalize().toAbsolutePath().toString()
-    }
-}
+)
 
 data class HugoPaths(
     val root: Path,

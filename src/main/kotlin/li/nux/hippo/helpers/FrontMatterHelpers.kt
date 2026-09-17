@@ -18,7 +18,6 @@ import li.nux.hippo.model.ImageFrontMatter
 import li.nux.hippo.model.ImageFrontMatter.Companion.MARK_DOWN_FILE_EXTENSION
 import li.nux.hippo.model.ImageMetadata
 import li.nux.hippo.model.ImageMetadata.Companion.IMG_NAME_PREFIX
-import li.nux.hippo.model.SubAlbum
 import li.nux.hippo.printIf
 import org.apache.tika.Tika
 
@@ -47,10 +46,6 @@ fun updateAlbumMarkdownDocs(
         )
     }
     groupedByPath.forEach { (albumPath, albums) ->
-        val subAlbums = groupedByPath.keys
-            .filter { isDirectSubfolder(it, albumPath) }
-            .flatMap { childPath -> groupedByPath[childPath]!!.map { SubAlbum.from(it, childPath) } }
-            .sortedBy { it.title }
         val path = Path.of(albumPath + File.separator + "_index.md")
         printIf(params, "Front matter index path $path")
         val existingAlbumFromFrontMatter = when (path.exists()) {
@@ -58,7 +53,6 @@ fun updateAlbumMarkdownDocs(
             else -> null
         }
         albums.sortedBy { it.title }.forEach {
-            it.subAlbums = subAlbums
             existingAlbumFromFrontMatter?.also { afm ->
                 it.title = afm.title.replace('_', ' ')
                 it.albumTitle = afm.albumTitle.replace('_', ' ')

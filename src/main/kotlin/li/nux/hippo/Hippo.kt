@@ -73,7 +73,6 @@ class Hippo : CliktCommand() {
             watermark = watermark?.let { maybeHugoPaths?.let { p: HugoPaths -> WatermarkConfig.from(it, p) } },
             verbose = verbose,
             demo = demo,
-            contentDirectory = directory,
         )
         maybeHugoPaths?.let { paths ->
             if (regenerate) {

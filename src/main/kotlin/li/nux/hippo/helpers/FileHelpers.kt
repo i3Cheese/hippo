@@ -40,12 +40,6 @@ fun getSetOfPaths(path: Path): Set<Path> {
     }
 }
 
-fun isDirectSubfolder(subfolder: String, albumPath: String): Boolean {
-    return subfolder != albumPath &&
-        subfolder.startsWith(albumPath) &&
-        !subfolder.removePrefix(albumPath + File.separator).contains(File.separator)
-}
-
 fun sanitizeDirectoryNames(hugoPaths: HugoPaths, params: HippoParams) {
     Files.createDirectories(hugoPaths.albums.toAbsolutePath())
     Files.walk(hugoPaths.albums, MAX_DIRECTORY_DEPTH)

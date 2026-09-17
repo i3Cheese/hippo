@@ -5,9 +5,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Base64
 import java.util.Locale
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -20,10 +18,6 @@ data class Album(
     var albumTitle: String = "",
     var description: String = "",
     var coverImage: GalleryImage? = null,
-    @Transient
-    var subAlbums: List<SubAlbum> = emptyList(),
-    @Transient
-    val images: List<AlbumImage> = emptyList(),
     val lastUpdated: String = formatter.format(LocalDateTime.now()),
 ) {
     companion object {
@@ -38,8 +32,6 @@ data class Album(
                 albumTitle = capitalize(images.first().album),
                 description = "Insert album description here",
                 coverImage = GalleryImage.from(path, images.first().getReference()),
-                subAlbums = emptyList(),
-                images = images.map { AlbumImage.from(it) },
                 lastUpdated = formatter.format(
                     images.map { it.created }.sortedByDescending { it }.first() ?: LocalDateTime.now()
                 )
@@ -58,8 +50,6 @@ data class Album(
                 albumTitle = "Albums",
                 description = "Insert description here",
                 coverImage = null,
-                subAlbums = emptyList(),
-                images = emptyList(),
             )
         }
 
@@ -70,59 +60,7 @@ data class Album(
 }
 
 @Serializable
-data class SubAlbum(
-    val albumId: String,
-    val title: String,
-    val albumTitle: String,
-    val coverImage: GalleryImage? = null,
-    val imageCount: Int? = null,
-    val path: String,
-    val lastUpdated: String = formatter.format(LocalDateTime.now()),
-) {
-    companion object {
-        fun from(album: Album, realPath: String): SubAlbum {
-            return SubAlbum(
-                albumId = album.albumId,
-                title = album.title,
-                albumTitle = album.title,
-                coverImage = album.coverImage,
-                imageCount = album.images.size.plus (album.subAlbums.sumOf { it.imageCount ?: 0}),
-                path = realPath.lowercase().split("/content").last(),
-                lastUpdated = album.images
-                    .map { it.lastUpdated }
-                    .maxByOrNull { it }
-                    ?: formatter.format(LocalDateTime.now())
-            )
-        }
-    }
-}
-
-@Serializable
-data class AlbumImage(
-    val imageId: String,
-    val imagePaths: GalleryImage,
-    val imageTitle: String,
-    val lastUpdated: String = formatter.format(LocalDateTime.now())
-) {
-    companion object {
-        fun from(image: ImageMetadata): AlbumImage {
-            return AlbumImage(
-                imageId = image.getReference(),
-                imagePaths = GalleryImage.from(
-                    image.path,
-                    image.getReference(),
-                ),
-                imageTitle = image.title ?: "Image ${image.getReference()}",
-                lastUpdated = formatter.format(image.updated ?: LocalDateTime.now()),
-            )
-        }
-    }
-}
-
-@Serializable
 data class GalleryImage(
-    @kotlinx.serialization.Transient
-    val albumPath: String = "",
     val imageId: String,
     val thumbnail: String,
     val smallImage: String,
@@ -137,7 +75,6 @@ data class GalleryImage(
             val modifiedPath = path.split("content/albums/").last()
             val imagePath = IMAGE_ROOT + modifiedPath + File.separator
             return GalleryImage(
-                albumPath = modifiedPath,
                 imageId = imageId,
                 thumbnail = imagePath + ConvertedImage.THUMBNAIL.getFilename(imageId),
                 smallImage = imagePath + ConvertedImage.SMALL.getFilename(imageId),

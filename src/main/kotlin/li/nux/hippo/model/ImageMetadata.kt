@@ -1,9 +1,7 @@
 package li.nux.hippo.model
 
 import java.sql.ResultSet
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Objects
 import kotlinx.serialization.Serializable
 import li.nux.hippo.helpers.prettyJson
@@ -16,7 +14,6 @@ data class ImageMetadata(
     val title: String? = null,
     val description: String? = null,
     val credit: String? = null,
-    val year: List<String> = emptyList(),
     val captureDate: String? = null,
     val captureTime: String? = null,
     val keywords: List<String> = emptyList(),
@@ -80,7 +77,6 @@ data class ImageMetadata(
     companion object {
         const val RADIX = 35
         const val IMG_NAME_PREFIX = "fo2_"
-        private val df: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 
         fun fromResultSet(resultSet: ResultSet) = ImageMetadata(
             id = resultSet.getInt("id"),
@@ -90,7 +86,6 @@ data class ImageMetadata(
             title = resultSet.getString("title"),
             description = resultSet.getString("description"),
             credit = resultSet.getString("credit"),
-            year = getYearFrom(resultSet.getString("capture_date"))?.let { listOf(it) } ?: emptyList(),
             captureDate = resultSet.getString("capture_date"),
             captureTime = resultSet.getString("capture_time"),
             keywords = resultSet.getString("keywords")
@@ -113,12 +108,6 @@ data class ImageMetadata(
         private fun getStockImageSiteFrom(resultSet: ResultSet): List<String> {
             val sis = resultSet.getString("stock_image_site")
             return if (resultSet.wasNull()) emptyList() else listOf(sis)
-        }
-
-        private fun getYearFrom(capturedDate: String?): String? {
-            return capturedDate?.let {
-                LocalDate.parse(it, df ).year.toString()
-            }
         }
     }
 }

@@ -24,25 +24,6 @@ fun connect(): Connection {
 }
 
 class StorageService {
-    @Deprecated("To be removed")
-    fun exists(imageId: String): ImageMetadata? {
-        val connection = connect()
-        val result = try {
-            connection.prepareStatement(FIND_BY_IMAGE_ID).use { prepped ->
-                prepped.setString(1, imageId)
-                val resultSet = prepped.executeQuery()
-                while (resultSet.next()) {
-                    return fromResultSet(resultSet)
-                }
-                null
-            }
-        } catch (e: SQLException) {
-            System.err.println(e.message)
-            null
-        }
-        return result
-    }
-
     fun fetchAllImages(): List<ImageMetadata> {
         val images = mutableListOf<ImageMetadata>()
         val connection = connect()
@@ -225,7 +206,6 @@ class StorageService {
             WHERE id = ?
         """
         private const val UPDATE_CONTENT_HASH = "UPDATE posted_image SET content_hash = ? WHERE id = ?"
-        private const val FIND_BY_IMAGE_ID = "SELECT * FROM posted_image WHERE image_id = ?"
         private const val FETCH_ALL = "SELECT * FROM posted_image ORDER BY image_id"
         private const val DELETE_POSTED_IMAGE = "DELETE FROM posted_image where id = ? and image_id = ?"
         private const val INSERT_POSTED_IMAGE = """
