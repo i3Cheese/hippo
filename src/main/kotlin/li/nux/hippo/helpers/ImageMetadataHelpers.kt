@@ -20,6 +20,7 @@ import com.drew.metadata.exif.ExifDirectoryBase.TAG_FOCAL_LENGTH
 import com.drew.metadata.exif.ExifDirectoryBase.TAG_ISO_EQUIVALENT
 import com.drew.metadata.exif.ExifDirectoryBase.TAG_MAKE
 import com.drew.metadata.exif.ExifDirectoryBase.TAG_MODEL
+import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifSubIFDDirectory
 import com.drew.metadata.iptc.IptcDirectory
 import com.drew.metadata.xmp.XmpDirectory
@@ -68,8 +69,11 @@ fun getImageMetadata(file: Path, params: HippoParams): ImageMetadata {
         val fNumber = maybeExif.map { exif -> exif.getDescription(TAG_FNUMBER) }.orElse("")
         val exposureTime = maybeExif.map { exif -> exif.getDescription(TAG_EXPOSURE_TIME) }.orElse("")
         val iso = maybeExif.map { exif -> exif.getDescription(TAG_ISO_EQUIVALENT) }.orElse("")
-        val make = maybeExif.map { exif -> exif.getString(TAG_MAKE) }.orElse("")
-        val model = maybeExif.map { exif -> exif.getString(TAG_MODEL) }.orElse("")
+        // Make/Model live in IFD0 (the main image directory), not the Exif sub-IFD that carries
+        // exposure/ISO/focal length, so they need to be looked up separately.
+        val maybeIfd0 = metadata.getDirectoriesOfType(ExifIFD0Directory::class.java).stream().findFirst()
+        val make = maybeIfd0.map { ifd0 -> ifd0.getString(TAG_MAKE) }.orElse("")
+        val model = maybeIfd0.map { ifd0 -> ifd0.getString(TAG_MODEL) }.orElse("")
         printIf(params, "fStop: $fNumber,exposure: $exposureTime,iso: $iso,Make: $make,Model: $model")
 
         val exifDirectory = maybeExif.orElse(null)
