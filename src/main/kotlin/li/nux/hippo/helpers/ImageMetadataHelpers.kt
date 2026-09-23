@@ -105,6 +105,8 @@ fun getImageMetadata(file: Path, params: HippoParams): ImageMetadata {
                     title = iptcTitle.ifBlank { getXmpTextValue(metadata, "dc:title") },
                     description = iptcDescription.ifBlank { getXmpTextValue(metadata, "dc:description") },
                     credit = getValueFromIptc(iptcDirectory, IptcDirectory.TAG_CREDIT),
+                    creator = getValueFromIptc(iptcDirectory, IptcDirectory.TAG_BY_LINE)
+                        .ifBlank { getXmpTextValue(metadata, "dc:creator") },
                     captureDate = captureDate,
                     captureTime = captureTime,
                     keywords = Optional.ofNullable(iptcDirectory.keywords)
@@ -122,6 +124,7 @@ fun getImageMetadata(file: Path, params: HippoParams): ImageMetadata {
                     filename = filename,
                     title = getXmpTextValue(metadata, "dc:title"),
                     description = getXmpTextValue(metadata, "dc:description"),
+                    creator = getXmpTextValue(metadata, "dc:creator"),
                     captureDate = fallback?.first,
                     captureTime = fallback?.second,
                     exposureDetails = exposureDetails.ifAnyData(),

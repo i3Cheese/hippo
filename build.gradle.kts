@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "li.nux.hippo"
-version = "1.0.15"
+version = "1.0.16"
 
 repositories {
     mavenCentral()

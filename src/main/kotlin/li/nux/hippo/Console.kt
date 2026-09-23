@@ -88,6 +88,7 @@ data class HippoParams(
     val watermark: WatermarkConfig?,
     val verbose: Boolean = false,
     val demo: Boolean = false,
+    val writeWeights: Boolean = false,
 )
 
 data class HugoPaths(

@@ -38,6 +38,8 @@ Options:
   --clear                   Remove demo files if existing. Also removed the database. Use with caution!
   --regenerate              Remove markdown files if existing. Also removed the database. Use with caution!
   --refine                  Refine front matter in existing markdown files.
+  --write-weights           Write a Hugo `weight` front matter field for every image, sorted by
+                            captureDateTime and numbered 10, 20, 30, ...
   -h, --help                Show this message and exit
 
 Arguments:

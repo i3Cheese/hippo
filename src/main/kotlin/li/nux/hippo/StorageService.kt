@@ -72,8 +72,9 @@ class StorageService {
                 prepped.setString(17, img.stockImageSite.firstOrNull())
                 prepped.setString(18, img.extra.let { prettyJson.encodeToString(it) })
                 prepped.setString(19, img.contentHash)
-                prepped.setString(20, now)
-                prepped.setInt(21, id)
+                prepped.setString(20, img.creator)
+                prepped.setString(21, now)
+                prepped.setInt(22, id)
                 prepped.executeUpdate()
             }
         } catch (e: SQLException) {
@@ -109,8 +110,9 @@ class StorageService {
                 prepped.setString(18, img.stockImageSite.firstOrNull() )
                 prepped.setString(19, img.extra.let { prettyJson.encodeToString(it) } )
                 prepped.setString(20, img.contentHash)
-                prepped.setString(21, now)
+                prepped.setString(21, img.creator)
                 prepped.setString(22, now)
+                prepped.setString(23, now)
                 prepped.executeUpdate()
                 return prepped.generatedKeys.getInt(1)
             }
@@ -174,12 +176,16 @@ class StorageService {
                 stock_image_site TEXT NULL,
                 extra_fields TEXT NOT NULL,
                 content_hash TEXT,
+                creator TEXT,
                 created TEXT NOT NULL,
                 updated TEXT NOT NULL
             );"""
 
         private const val ADD_CONTENT_HASH_COLUMN =
             "ALTER TABLE posted_image ADD COLUMN content_hash TEXT"
+
+        private const val ADD_CREATOR_COLUMN =
+            "ALTER TABLE posted_image ADD COLUMN creator TEXT"
 
         private const val UPDATE_POSTED_IMAGE = """
             UPDATE posted_image SET
@@ -202,6 +208,7 @@ class StorageService {
                 stock_image_site = ?,
                 extra_fields = ?,
                 content_hash = ?,
+                creator = ?,
                 updated = ?
             WHERE id = ?
         """
@@ -230,10 +237,11 @@ class StorageService {
                 stock_image_site,
                 extra_fields,
                 content_hash,
+                creator,
                 created,
                 updated
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
 
         fun createTable() {
@@ -243,12 +251,14 @@ class StorageService {
                     conn.createStatement().use { stmt ->
                         stmt.execute(CREATE_TABLE_POSTED_IMAGE)
                     }
-                    // Migration for databases created before content_hash existed.
-                    conn.createStatement().use { stmt ->
-                        try {
-                            stmt.execute(ADD_CONTENT_HASH_COLUMN)
-                        } catch (e: SQLException) {
-                            if (e.message?.contains("duplicate column name") != true) throw e
+                    // Migrations for databases created before content_hash/creator existed.
+                    listOf(ADD_CONTENT_HASH_COLUMN, ADD_CREATOR_COLUMN).forEach { migration ->
+                        conn.createStatement().use { stmt ->
+                            try {
+                                stmt.execute(migration)
+                            } catch (e: SQLException) {
+                                if (e.message?.contains("duplicate column name") != true) throw e
+                            }
                         }
                     }
                 }

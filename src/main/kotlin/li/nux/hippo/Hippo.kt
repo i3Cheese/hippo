@@ -59,6 +59,12 @@ class Hippo : CliktCommand() {
     private val refine: Boolean by option("--refine")
         .flag(default = false)
         .help("Refine front matter in existing markdown files.")
+    private val writeWeights: Boolean by option("--write-weights")
+        .flag(default = false)
+        .help(
+            "Write a Hugo `weight` front matter field for every image, sorted by \n" +
+                "captureDateTime and numbered 10, 20, 30, ..."
+        )
     private val directory: String by argument()
         .help("Path to the root directory for your Hugo website project")
         .default("../..")
@@ -73,6 +79,7 @@ class Hippo : CliktCommand() {
             watermark = watermark?.let { maybeHugoPaths?.let { p: HugoPaths -> WatermarkConfig.from(it, p) } },
             verbose = verbose,
             demo = demo,
+            writeWeights = writeWeights,
         )
         maybeHugoPaths?.let { paths ->
             if (regenerate) {

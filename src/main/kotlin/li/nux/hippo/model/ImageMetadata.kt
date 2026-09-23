@@ -14,6 +14,7 @@ data class ImageMetadata(
     val title: String? = null,
     val description: String? = null,
     val credit: String? = null,
+    val creator: String? = null,
     val captureDate: String? = null,
     val captureTime: String? = null,
     val keywords: List<String> = emptyList(),
@@ -46,6 +47,7 @@ data class ImageMetadata(
             title,
             description,
             credit,
+            creator,
             captureDate,
             captureTime,
             keywords,
@@ -66,6 +68,7 @@ data class ImageMetadata(
             title == other.title &&
             description == other.description &&
             credit == other.credit &&
+            creator == other.creator &&
             captureDate == other.captureDate &&
             captureTime == other.captureTime &&
             keywords == other.keywords &&
@@ -86,6 +89,7 @@ data class ImageMetadata(
             title = resultSet.getString("title"),
             description = resultSet.getString("description"),
             credit = resultSet.getString("credit"),
+            creator = resultSet.getString("creator"),
             captureDate = resultSet.getString("capture_date"),
             captureTime = resultSet.getString("capture_time"),
             keywords = resultSet.getString("keywords")

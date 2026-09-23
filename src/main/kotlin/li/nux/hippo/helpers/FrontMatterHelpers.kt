@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.LocalDateTime
 import java.util.Base64
 import kotlin.io.path.exists
 import li.nux.hippo.FrontMatterFormat
@@ -23,6 +24,7 @@ import org.apache.tika.Tika
 
 private const val TOML_WRAPPING = "+++\n"
 private const val YAML_WRAPPING = "---\n"
+private const val WEIGHT_INCREMENT = 10
 fun tomlWrap(string: String): String = TOML_WRAPPING + string + "\n$TOML_WRAPPING"
 fun yamlWrap(string: String): String = YAML_WRAPPING + string + "\n$YAML_WRAPPING"
 
@@ -88,9 +90,10 @@ fun createOrReplacePages(
             "Album ${it.key} has ${it.value.size} images. Files to create/update:  ${it.key}.md " +
                 "${it.value.map { img -> img.getDocumentId() + MARK_DOWN_FILE_EXTENSION }.toList()}"
         )
+        val weightsByReference = weightsByCaptureDateTime(it.value, params)
         it.value.forEach { im ->
             val imFile = Paths.get(im.path + File.separator + im.getReference() + MARK_DOWN_FILE_EXTENSION)
-            val imf = ImageFrontMatter.from(im)
+            val imf = ImageFrontMatter.from(im, weightsByReference[im.getReference()])
             val frontMatter = when (params.frontMatterFormat) {
                 JSON -> prettyJson.encodeToString(imf)
                 TOML -> tomlWrap(lenientToml.encodeToString(ImageFrontMatter.serializer(), imf))
@@ -109,6 +112,17 @@ fun createOrReplacePages(
             Files.write(imFile, frontMatter.toByteArray())
         }
     }
+}
+
+private fun weightsByCaptureDateTime(
+    images: List<ImageMetadata>,
+    params: HippoParams,
+): Map<String, Int> {
+    if (!params.writeWeights) return emptyMap()
+    return images
+        .sortedBy { ImageFrontMatter.getCapturedDateTime(it) ?: LocalDateTime.MAX }
+        .mapIndexed { index, im -> im.getReference() to (index + 1) * WEIGHT_INCREMENT }
+        .toMap()
 }
 
 fun getImagesFromFrontMatters(

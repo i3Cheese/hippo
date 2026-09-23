@@ -15,10 +15,13 @@ data class ImageFrontMatter(
     val imageTitle: String,
     val description: String,
     val credit: String? = null,
+    val creator: String? = null,
     val equipment: List<String>,
     val year: String? = null,
     val captureDate: String? = null,
     val captureDateTime: String? = null,
+    val date: String? = null,
+    val weight: Int? = null,
     var imagePaths: GalleryImage? = null,
     val keywords: List<String>,
     val exifDetails: ExposureDetails? = null,
@@ -37,6 +40,7 @@ data class ImageFrontMatter(
             title = imageTitle,
             description = description,
             credit = credit,
+            creator = creator,
             captureDate = localDateTime?.let { DateTimeFormatter.ofPattern("yyyyMMdd").format(it) },
             captureTime = localDateTime?.let { DateTimeFormatter.ofPattern("HHmmss").format(it) },
             keywords = keywords.map { it.replace("\"", "") },
@@ -48,7 +52,7 @@ data class ImageFrontMatter(
 
     companion object {
         const val  MARK_DOWN_FILE_EXTENSION = ".md"
-        fun from(imageMetadata: ImageMetadata): ImageFrontMatter {
+        fun from(imageMetadata: ImageMetadata, weight: Int? = null): ImageFrontMatter {
             val captured= getCapturedDateTime(imageMetadata)
             return ImageFrontMatter(
                 imageId = imageMetadata.getReference(),
@@ -61,11 +65,14 @@ data class ImageFrontMatter(
                 imageTitle = imageMetadata.title ?: "Insert title here",
                 description = imageMetadata.description ?: "Insert description here",
                 credit = imageMetadata.credit,
+                creator = imageMetadata.creator,
                 equipment = imageMetadata.exposureDetails
                     ?.let { listOfNotNull(it.cameraMake, it.cameraModel) } ?: emptyList(),
                 year = captured?.year?.toString(),
                 captureDate = captured?.toLocalDate()?.format(DateTimeFormatter.ISO_LOCAL_DATE),
                 captureDateTime = captured?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                date = captured?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                weight = weight,
                 imagePaths = GalleryImage.from(imageMetadata.path, imageMetadata.getReference()),
                 keywords = imageMetadata.keywords
                     .map { it.replace("\"", "") }
@@ -76,7 +83,7 @@ data class ImageFrontMatter(
             )
         }
 
-        private fun getCapturedDateTime(
+        fun getCapturedDateTime(
             imageMetadata: ImageMetadata,
         ): LocalDateTime? {
             val dtf = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
