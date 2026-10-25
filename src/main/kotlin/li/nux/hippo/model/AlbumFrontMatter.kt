@@ -17,7 +17,7 @@ data class Album(
     var title: String = "",
     var albumTitle: String = "",
     var description: String = "",
-    var coverImage: GalleryImage? = null,
+    var coverImage: String? = null,
     val lastUpdated: String = formatter.format(LocalDateTime.now()),
 ) {
     companion object {
@@ -31,7 +31,7 @@ data class Album(
                 title = capitalize(images.first().album),
                 albumTitle = capitalize(images.first().album),
                 description = "Insert album description here",
-                coverImage = GalleryImage.from(path, images.first().getReference()),
+                coverImage = images.first().getReference(),
                 lastUpdated = formatter.format(
                     images.map { it.created }.sortedByDescending { it }.first() ?: LocalDateTime.now()
                 )

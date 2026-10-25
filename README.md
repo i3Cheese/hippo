@@ -38,6 +38,8 @@ Options:
   --clear                   Remove demo files if existing. Also removed the database. Use with caution!
   --regenerate              Remove markdown files if existing. Also removed the database. Use with caution!
   --refine                  Refine front matter in existing markdown files.
+  -a, --album=<text>        Only process the album with this folder name (e.g. `france`). Can be
+                            repeated. Other albums are left untouched. Default: all albums.
   --write-weights           Write a Hugo `weight` front matter field for every image, sorted by
                             captureDateTime and numbered 10, 20, 30, ...
   -h, --help                Show this message and exit

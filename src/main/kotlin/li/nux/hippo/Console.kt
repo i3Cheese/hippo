@@ -89,7 +89,11 @@ data class HippoParams(
     val verbose: Boolean = false,
     val demo: Boolean = false,
     val writeWeights: Boolean = false,
-)
+    val albums: Set<String> = emptySet(),
+) {
+    /** True if the album (its folder name) is in scope for this run; all albums are when none were given. */
+    fun includesAlbum(album: String): Boolean = albums.isEmpty() || album in albums
+}
 
 data class HugoPaths(
     val root: Path,

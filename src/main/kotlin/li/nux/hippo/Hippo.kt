@@ -14,6 +14,7 @@ import com.github.ajalt.clikt.parameters.arguments.help
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.help
+import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import li.nux.hippo.helpers.addTaxonomiesToHugoConfig
@@ -65,6 +66,12 @@ class Hippo : CliktCommand() {
             "Write a Hugo `weight` front matter field for every image, sorted by \n" +
                 "captureDateTime and numbered 10, 20, 30, ..."
         )
+    private val albums: List<String> by option("-a", "--album")
+        .multiple()
+        .help(
+            "Only process the album with this folder name (e.g. `france`). Can be \n" +
+                "repeated. Other albums are left untouched. Default: all albums."
+        )
     private val directory: String by argument()
         .help("Path to the root directory for your Hugo website project")
         .default("../..")
@@ -80,6 +87,7 @@ class Hippo : CliktCommand() {
             verbose = verbose,
             demo = demo,
             writeWeights = writeWeights,
+            albums = albums.toSet(),
         )
         maybeHugoPaths?.let { paths ->
             if (regenerate) {
@@ -87,6 +95,11 @@ class Hippo : CliktCommand() {
             }
             init()
             printIf(params, "HugoPaths: $paths")
+            val unknownAlbums = params.albums - existingAlbumNames(paths)
+            if (unknownAlbums.isNotEmpty()) {
+                println("Unknown album(s): ${unknownAlbums.joinToString()}. No changes done.")
+                return
+            }
             addTaxonomiesToHugoConfig(paths)
             if (clear) {
                 clear(paths)
@@ -104,6 +117,11 @@ class Hippo : CliktCommand() {
             )
         }
     }
+
+    private fun existingAlbumNames(paths: HugoPaths): Set<String> =
+        Files.walk(paths.albums, MAX_DIRECTORY_DEPTH).use { stream ->
+            stream.filter(Files::isDirectory).map { it.fileName.toString() }.collect(Collectors.toSet())
+        }
 
     private fun isHugoSiteDirectory(directory: String): HugoPaths? {
         val path: Path = Paths.get(directory)

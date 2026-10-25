@@ -74,6 +74,7 @@ fun execute(
             taskResults[NEW_IMAGE_TOTAL] = it.size
             taskResults[NEW_ALBUM_TOTAL] = it.groupBy { im -> im.album }.keys.size
         }
+        .filter { params.includesAlbum(it.album) }
         .groupBy { it.getAlbumId() }
         .also { createOrReplacePages(it, params) }
     updateAlbumMarkdownDocs(allImages, params, hugoPaths)
@@ -254,7 +255,9 @@ private fun synchronizeImages(
     val tika = Tika()
     val images: MutableMap<String, ImageMetadata> = mapOf<String, ImageMetadata>().toMutableMap()
 
-    val paths = getSetOfPaths(path).stream().sorted().toList().filter { Files.isRegularFile(it) }
+    val paths = getSetOfPaths(path).stream().sorted().toList()
+        .filter { Files.isRegularFile(it) }
+        .filter { params.includesAlbum(it.parent.fileName.toString()) }
     // Fetch all images from previous run
     images.putAll(
         storageService.fetchAllImages()
@@ -262,6 +265,9 @@ private fun synchronizeImages(
                 taskResults[IMAGES_FROM_PREVIOUS_RUN] = it.size
                 taskResults[ALBUMS_FROM_PREVIOUS_RUN] = it.groupBy { im -> im.album }.keys.size
             }
+            // Images of albums outside this run's scope aren't read from disk, so they must not be
+            // compared at all - otherwise they would look deleted and be dropped from the database.
+            .filter { params.includesAlbum(it.album) }
             .map { it.getReference() to it }
     )
 

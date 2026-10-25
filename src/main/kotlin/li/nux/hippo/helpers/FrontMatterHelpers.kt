@@ -93,7 +93,12 @@ fun createOrReplacePages(
         val weightsByReference = weightsByCaptureDateTime(it.value, params)
         it.value.forEach { im ->
             val imFile = Paths.get(im.path + File.separator + im.getReference() + MARK_DOWN_FILE_EXTENSION)
-            val imf = ImageFrontMatter.from(im, weightsByReference[im.getReference()])
+            // Without --write-weights the weight is left exactly as it is in the existing page.
+            val weight = when (params.writeWeights) {
+                true -> weightsByReference[im.getReference()]
+                false -> existingWeight(imFile)
+            }
+            val imf = ImageFrontMatter.from(im, weight)
             val frontMatter = when (params.frontMatterFormat) {
                 JSON -> prettyJson.encodeToString(imf)
                 TOML -> tomlWrap(lenientToml.encodeToString(ImageFrontMatter.serializer(), imf))
@@ -113,6 +118,9 @@ fun createOrReplacePages(
         }
     }
 }
+
+private fun existingWeight(imFile: Path): Int? =
+    if (imFile.exists()) runCatching { getImageDataFromFrontMatter(imFile).weight }.getOrNull() else null
 
 private fun weightsByCaptureDateTime(
     images: List<ImageMetadata>,
